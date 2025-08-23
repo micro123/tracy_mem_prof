@@ -1,6 +1,7 @@
 #include <new>
 
 #include <dlfcn.h>
+#include <malloc.h>
 #include <tracy/Tracy.hpp>
 
 #define EXPORT __attribute__((visibility("default")))
@@ -13,6 +14,8 @@ namespace
 
     void* (*libc_realloc)(void*,size_t) = nullptr;
 
+    void* (*libc_memalign)(size_t,size_t) = nullptr;
+
     void  (*libc_free)(void*) = nullptr;
 }
 
@@ -22,6 +25,7 @@ static void load_sym() {
     *(void**)&libc_malloc = dlsym(RTLD_NEXT, "__libc_malloc");
     *(void**)&libc_calloc = dlsym(RTLD_NEXT, "__libc_calloc");
     *(void**)&libc_realloc = dlsym(RTLD_NEXT, "__libc_realloc");
+    *(void**)&libc_memalign = dlsym(RTLD_NEXT, "__libc_memalign");
     *(void**)&libc_free = dlsym(RTLD_NEXT, "__libc_free");
 }
 
@@ -58,6 +62,19 @@ extern "C" {
         void *r = libc_realloc(ptr, sz);
         if (__glibc_likely(level == 0)) {
             TRACY_CTX(TracyFree(ptr);TracyAlloc(r, sz));
+        }
+        return r;
+    }
+
+    EXPORT
+    void *memalign(size_t alignment, size_t sz)
+    {
+        if (libc_malloc == nullptr) {
+            load_sym();
+        }
+        void *r = libc_memalign(alignment, sz);
+        if (__glibc_likely(level == 0)) {
+            TRACY_CTX(TracyAlloc(r, sz));
         }
         return r;
     }
