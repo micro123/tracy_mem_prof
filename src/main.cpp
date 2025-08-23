@@ -1,7 +1,6 @@
 #include <new>
 
 #include <dlfcn.h>
-#include <spinlock.hpp>
 #include <tracy/Tracy.hpp>
 
 #define EXPORT __attribute__((visibility("default")))
@@ -15,8 +14,6 @@ namespace
     void* (*libc_realloc)(void*,size_t) = nullptr;
 
     void  (*libc_free)(void*) = nullptr;
-
-    SpinLock alloc_lock;
 }
 
 #define TRACY_CTX(X) do { ++level; X; --level; } while(0)

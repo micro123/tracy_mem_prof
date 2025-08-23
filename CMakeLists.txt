@@ -9,7 +9,6 @@ add_library(
     ${PROJECT_NAME}
     MODULE
     src/main.cpp
-    src/spinlock.cpp
     tracy/TracyClient.cpp
 )
 
